@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
@@ -89,15 +89,16 @@ router = Router()
 
 def get_keyboard():
     keyboard = [
-        [KeyboardButton(text="1️⃣ Идея по улучшению")],
-        [KeyboardButton(text="2️⃣ Замечание/Проблема")],
-        [KeyboardButton(text="3️⃣ Предложение по продукту/Маркетингу")],
-        [KeyboardButton(text="4️⃣ Другое")]
+        [KeyboardButton(text="Идея по улучшению")],
+        [KeyboardButton(text="Замечание/Проблема")],
+        [KeyboardButton(text="Предложение по продукту/Маркетингу")],
+        [KeyboardButton(text="Другое")]
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 @router.message(Command("start"))
+@router.callback_query('start')
 async def start(message: Message, state: FSMContext):
     await message.answer(
         "<b>Привет! Я - Ваффи!</b>\n\n"
@@ -121,10 +122,10 @@ async def process_name(message: Message, state: FSMContext):
     await state.update_data(user_info=message.text)
     
     await message.answer(
-        "📝 <b>Как это работает:</b>\n\n"
-        "1️⃣ Вы пишете идею, предложение или замечание;\n"
-        "2️⃣ Я передаю сообщение команде Vaffel!;\n"
-        "3️⃣ Сильные идеи мы берем в работу и возвращаемся с решениями;\n\n"
+        "<b>Как это работает:</b>\n\n"
+        "1. Вы пишете идею, предложение или замечание;\n"
+        "2. Я передаю сообщение команде Vaffel!;\n"
+        "3. Сильные идеи мы берем в работу и возвращаемся с решениями;\n\n"
         "<b>Выберите тип обращения:</b>",
         reply_markup=get_keyboard(),
         parse_mode="HTML"
@@ -136,7 +137,7 @@ async def process_name(message: Message, state: FSMContext):
 async def choose_scenario(message: Message, state: FSMContext):
     text = message.text
     
-    if "1️⃣" in text or text.startswith("1"):
+    if "Идея по улучшению" in text or text.startswith("1"):
         scenario = "1"
         prompt = (
             "<b>Опишите, пожалуйста:</b>\n\n"
@@ -145,7 +146,7 @@ async def choose_scenario(message: Message, state: FSMContext):
             "• Где будет заметен результат внедрения "
             "(гости, команда, выручка, средний чек, процессы)"
         )
-    elif "2️⃣" in text or text.startswith("2"):
+    elif "Замечание/Проблема" in text or text.startswith("2"):
         scenario = "2"
         prompt = (
             "<b>Спасибо, что говорите об этом!</b>\n"
@@ -154,7 +155,7 @@ async def choose_scenario(message: Message, state: FSMContext):
             "• к чему это приводит в работе;\n"
             "• опишите вариант решения, если он у вас уже есть;"
         )
-    elif "3️⃣" in text or text.startswith("3"):
+    elif "Предложение по продукту/Маркетингу" in text or text.startswith("3"):
         scenario = "3"
         prompt = (
             "<b>Супер! Это очень ценно.</b>\n"
@@ -162,7 +163,7 @@ async def choose_scenario(message: Message, state: FSMContext):
             "• про вашу идею или гипотезу;\n"
             "• почему на ваш взгляд она может сработать."
         )
-    elif "4️⃣" in text or text.startswith("4"):
+    elif "Другое" in text or text.startswith("4"):
         scenario = "4"
         prompt = (
             "<b>Напишите все, что считаете важным.</b>\n\n"
@@ -191,20 +192,23 @@ async def process_details(message: Message, state: FSMContext):
     sheets.save(scenario, name, address, details)
     
     await message.answer(
-        "<b>Подтверждение получения</b>\n\n"
-        "Спасибо!\n"
+        "<b>Спасибо!</b>\n\n"
         "Мы получили ваше сообщение и обязательно его разберем. "
         "Команда уже читает и думает, как их применить для развития Vaffel!",
         parse_mode="HTML"
     )
     
+    start_again = [
+        [InlineKeyboardMarkup([
+            InlineKeyboardButton("Начать заново", callback_data="start")
+        ])]
+    ]
     await asyncio.sleep(1)
     await message.answer(
-        "<b>Прощальный текст</b>\n\n"
-        "Спасибо, что помогаете делать Vaffel! сильнее. "
+        "<b>Спасибо, что помогаете делать Vaffel! сильнее. </b>\n"
         "Если появятся новые мысли - смело пишите вновь.\n"
         "Хорошего дня!",
-        parse_mode="HTML"
+        parse_mode="HTML", reply_markup=start_again
     )
     
     await state.clear()
@@ -215,7 +219,7 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
     
-    logger.info("🤖 Бот запущен!")
+    logger.info("Бот запущен!")
     await dp.start_polling(bot)
 
 
