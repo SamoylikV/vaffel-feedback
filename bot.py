@@ -13,7 +13,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 from aiogram.types import CallbackQuery
-from aiogram.filters import Text
+from aiogram import F
 
 load_dotenv()
 logging.basicConfig(
@@ -119,7 +119,7 @@ async def start(message: Message, state: FSMContext):
     await state.set_state(Form.name_city_address)
 
 
-@router.callback_query(Text("start"))
+@router.callback_query(F.text == "start")
 async def start_callback(call: CallbackQuery, state: FSMContext):
     await call.message.answer(
         "<b>Привет! Я - Ваффи!</b>\n\n"
