@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
@@ -198,20 +199,17 @@ async def process_details(message: Message, state: FSMContext):
         parse_mode="HTML"
     )
     
-    start_again = [
-        [InlineKeyboardMarkup([
-            InlineKeyboardButton("Начать заново", callback_data="start")
-        ])]
-    ]
     await asyncio.sleep(1)
+    kb = InlineKeyboardBuilder()
+    kb.button(text="Начать заново", callback_data="start")
+
     await message.answer(
-        "<b>Спасибо, что помогаете делать Vaffel! сильнее. </b>\n"
-        "Если появятся новые мысли - смело пишите вновь.\n"
+        "<b>Спасибо, что помогаете делать Vaffel сильнее.</b>\n"
+        "Если появятся новые мысли — смело пишите вновь.\n"
         "Хорошего дня!",
-        parse_mode="HTML", reply_markup=start_again
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
     )
-    
-    await state.clear()
 
 
 async def main():
