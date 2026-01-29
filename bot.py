@@ -119,7 +119,7 @@ async def start(message: Message, state: FSMContext):
     await state.set_state(Form.name_city_address)
 
 
-@router.callback_query(F.text == "start")
+@router.callback_query(F.data == "start")
 async def start_callback(call: CallbackQuery, state: FSMContext):
     await call.message.answer(
         "<b>Привет! Я - Ваффи!</b>\n\n"
