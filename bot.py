@@ -73,9 +73,9 @@ class GoogleSheets:
                 worksheet = self.sheet.worksheet(sheet_name)
             except:
                 worksheet = self.sheet.add_worksheet(title=sheet_name, rows=1000, cols=10)
-                worksheet.append_row(['Должность', 'Адрес Vaffel', 'Суть', 'Дата'])
+                worksheet.append_row(['Должность', 'Адрес Vaffel', 'Суть'])
             
-            row = [name, address, details, datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+            row = [name, address, details]
             worksheet.append_row(row)
             logger.info(f"Данные сохранены в '{sheet_name}'")
             
