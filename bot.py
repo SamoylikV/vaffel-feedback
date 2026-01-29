@@ -12,6 +12,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+from aiogram.types import CallbackQuery
+from aiogram.filters import Text
 
 load_dotenv()
 logging.basicConfig(
@@ -99,7 +101,6 @@ def get_keyboard():
 
 
 @router.message(Command("start"))
-@router.callback_query('start')
 async def start(message: Message, state: FSMContext):
     await message.answer(
         "<b>Привет! Я - Ваффи!</b>\n\n"
@@ -117,6 +118,25 @@ async def start(message: Message, state: FSMContext):
     )
     await state.set_state(Form.name_city_address)
 
+
+@router.callback_query(Text("start"))
+async def start_callback(call: CallbackQuery, state: FSMContext):
+    await call.message.answer(
+        "<b>Привет! Я - Ваффи!</b>\n\n"
+        "Я здесь, чтобы собрать идеи, мысли и предложения.",
+        parse_mode="HTML"
+    )
+
+    await asyncio.sleep(1)
+
+    await call.message.answer(
+        "<b>Я хотела бы знать, кто мне пишет!</b>\n\n"
+        "Укажите имя, город и адрес вашего Vaffel! :)",
+        parse_mode="HTML"
+    )
+
+    await state.set_state(Form.name_city_address)
+    await call.answer()
 
 @router.message(Form.name_city_address)
 async def process_name(message: Message, state: FSMContext):
