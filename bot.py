@@ -27,7 +27,9 @@ CREDENTIALS_FILE = os.getenv('CREDENTIALS_FILE')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 
 class Form(StatesGroup):
-    name_city_address = State()
+    name = State()
+    city = State()
+    address = State()
     choose_scenario = State()
     details = State()
 
@@ -113,10 +115,10 @@ async def start(message: Message, state: FSMContext):
     await asyncio.sleep(1)
     await message.answer(
         "<b>Я хотела бы знать, кто мне пишет!</b>\n\n"
-        "Укажите имя, город и адрес вашего Vaffel! :)",
+        "Укажите ваше имя",
         parse_mode="HTML"
     )
-    await state.set_state(Form.name_city_address)
+    await state.set_state(Form.name)
 
 
 @router.callback_query(F.data == "start")
@@ -131,16 +133,40 @@ async def start_callback(call: CallbackQuery, state: FSMContext):
 
     await call.message.answer(
         "<b>Я хотела бы знать, кто мне пишет!</b>\n\n"
-        "Укажите имя, город и адрес вашего Vaffel! :)",
+        "Укажите ваше имя",
         parse_mode="HTML"
     )
 
-    await state.set_state(Form.name_city_address)
+    await state.set_state(Form.name)
     await call.answer()
 
-@router.message(Form.name_city_address)
+@router.message(Form.name)
 async def process_name(message: Message, state: FSMContext):
-    await state.update_data(user_info=message.text)
+    await state.update_data(name=message.text)
+    
+    await message.answer(
+        "<b>Отлично!</b>\n\n"
+        "Укажите город",
+        parse_mode="HTML"
+    )
+    await state.set_state(Form.city)
+
+
+@router.message(Form.city)
+async def process_city(message: Message, state: FSMContext):
+    await state.update_data(city=message.text)
+    
+    await message.answer(
+        "<b>Понятно!</b>\n\n"
+        "Укажите адрес",
+        parse_mode="HTML"
+    )
+    await state.set_state(Form.address)
+
+
+@router.message(Form.address)
+async def process_address(message: Message, state: FSMContext):
+    await state.update_data(address=message.text)
     
     await message.answer(
         "<b>Как это работает:</b>\n\n"
@@ -204,13 +230,14 @@ async def process_details(message: Message, state: FSMContext):
     details = message.text
     data = await state.get_data()
     
-    user_info = data.get('user_info', '')
-    parts = user_info.split(',', 1)
-    name = parts[0].strip() if parts else user_info
-    address = parts[1].strip() if len(parts) > 1 else ''
+    name = data.get('name', '')
+    city = data.get('city', '')
+    address = data.get('address', '')
+    
+    full_address = f"{city}, {address}"
     
     scenario = data.get('scenario')
-    sheets.save(scenario, name, address, details)
+    sheets.save(scenario, name, full_address, details)
     
     await message.answer(
         "<b>Спасибо!</b>\n\n"
